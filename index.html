@@ -1,0 +1,2045 @@
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <title>Nature Explore Treks — Trek Manager</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --g: #003b1d;
+      --bg: #f4f7f5;
+      --line: #dce5df;
+      --muted: #68756e;
+      --good: #087443;
+      --bad: #b42318;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: #17221b;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
+    button {
+      border: 0;
+      border-radius: 9px;
+      padding: 10px 14px;
+      background: var(--g);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #eaf0ec;
+      color: var(--g);
+    }
+
+    button.danger {
+      background: var(--bad);
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cbd8d0;
+      border-radius: 8px;
+      background: #fff;
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .top {
+      background: var(--g);
+      color: white;
+      padding: 12px 18px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .topin,
+    nav,
+    main {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .topin {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      background: white;
+      border-radius: 8px;
+    }
+
+    nav {
+      padding: 12px 18px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    main {
+      padding: 0 18px 40px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 17px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 10px #00000008;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 13px;
+    }
+
+    .formgrid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .metric {
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .muted {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .profit {
+      color: var(--good);
+    }
+
+    .loss {
+      color: var(--bad);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+
+    .section-title {
+      margin: 22px 0 10px;
+    }
+
+    .expense-row {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1.2fr 42px;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: end;
+    }
+
+    .login {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .loginbox {
+      width: min(430px, 100%);
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 25px;
+      box-shadow: 0 10px 40px #0002;
+      text-align: center;
+    }
+
+    .loginbox img {
+      width: 180px;
+      height: 180px;
+      object-fit: contain;
+    }
+
+    .loginbox .form {
+      text-align: left;
+    }
+
+    .loginbox .form > div {
+      margin: 12px 0;
+    }
+
+    .notice {
+      padding: 10px;
+      border-radius: 9px;
+      background: #fff7df;
+      color: #755b00;
+      font-size: 13px;
+      margin: 10px 0;
+    }
+
+    .notice.error {
+      background: #fff0ef;
+      color: var(--bad);
+    }
+
+    .notice.success {
+      background: #eaf5ef;
+      color: var(--good);
+    }
+
+    .status {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #eaf5ef;
+      color: #08673c;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 30px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 30px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 800px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .formgrid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .expense-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .expense-row button {
+        grid-column: 2;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .formgrid {
+        grid-template-columns: 1fr;
+      }
+
+      .topin {
+        align-items: flex-start;
+      }
+
+      main {
+        padding: 0 12px 30px;
+      }
+
+      .topin > div:last-child {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 5px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN -->
+  <div id="login" class="login">
+    <div class="loginbox">
+
+      <img src="company-logo.jpg" alt="Nature Explore Treks">
+
+      <h2>Nature Explore Treks</h2>
+
+      <div class="muted">
+        Shared Trek Profit Manager
+      </div>
+
+      <div class="form">
+
+        <div>
+          <label for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            placeholder="office@example.com"
+            autocomplete="email"
+          >
+        </div>
+
+        <div>
+          <label for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            placeholder="Password"
+            autocomplete="current-password"
+          >
+        </div>
+
+        <button
+          id="loginBtn"
+          style="width:100%"
+          onclick="login()"
+        >
+          Login
+        </button>
+
+        <div id="loginMsg" class="notice hidden"></div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- APP -->
+  <div id="app" class="hidden">
+
+    <header class="top">
+      <div class="topin">
+
+        <div class="brand">
+          <img src="company-logo.jpg" alt="Nature Explore Treks">
+
+          <div>
+            <b>Nature Explore Treks</b>
+
+            <div style="font-size:12px;opacity:.8">
+              Trek Profit Manager
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span id="userEmail" class="status"></span>
+
+          <button
+            class="secondary"
+            onclick="logout()"
+          >
+            Logout
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+
+    <nav>
+
+      <button onclick="show('dashboard')">
+        Dashboard
+      </button>
+
+      <button onclick="show('treks')">
+        All Treks
+      </button>
+
+      <button onclick="newTrek()">
+        + New Trek
+      </button>
+
+      <button
+        class="secondary"
+        onclick="show('admin')"
+      >
+        Admin / Settings
+      </button>
+
+      <button
+        class="secondary"
+        onclick="exportData()"
+      >
+        Backup
+      </button>
+
+    </nav>
+
+
+    <main>
+
+      <!-- DASHBOARD -->
+      <section id="dashboard">
+
+        <div class="grid">
+
+          <div class="card">
+            <div class="muted">Total Revenue</div>
+            <div class="metric" id="mRevenue">Rs. 0</div>
+          </div>
+
+          <div class="card">
+            <div class="muted">Total Expenses</div>
+            <div class="metric" id="mExpense">Rs. 0</div>
+          </div>
+
+          <div class="card">
+            <div class="muted">Net Profit</div>
+            <div class="metric profit" id="mProfit">Rs. 0</div>
+          </div>
+
+          <div class="card">
+            <div class="muted">To Collect</div>
+            <div class="metric" id="mDue">Rs. 0</div>
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <h2>Recent Treks</h2>
+
+          <div id="recent">
+            <div class="loading">
+              Loading...
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ALL TREKS -->
+      <section id="treks" class="hidden">
+
+        <div class="card">
+
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+
+            <h2>All Treks</h2>
+
+            <button onclick="newTrek()">
+              + New Trek
+            </button>
+
+          </div>
+
+          <div id="trekTable">
+            <div class="loading">
+              Loading...
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- EDITOR -->
+      <section id="editor" class="hidden">
+
+        <div class="card">
+
+          <h2 id="editorTitle">
+            New Trek
+          </h2>
+
+
+          <div class="formgrid">
+
+            <div>
+              <label>Trek Name *</label>
+              <input
+                id="name"
+                placeholder="Everest Base Camp"
+              >
+            </div>
+
+            <div>
+              <label>Client / Group</label>
+              <input id="client">
+            </div>
+
+            <div>
+              <label>Start Date</label>
+              <input id="date" type="date">
+            </div>
+
+            <div>
+              <label>Number of Clients *</label>
+              <input
+                id="clients"
+                type="number"
+                min="1"
+                value="1"
+              >
+            </div>
+
+            <div>
+              <label>Price Per Person (Rs.) *</label>
+              <input
+                id="price"
+                type="number"
+                min="0"
+                value="0"
+              >
+            </div>
+
+            <div>
+              <label>Amount Received (Rs.)</label>
+              <input
+                id="received"
+                type="number"
+                min="0"
+                value="0"
+              >
+            </div>
+
+            <div class="full">
+              <label>Notes</label>
+              <textarea id="notes"></textarea>
+            </div>
+
+          </div>
+
+
+          <h3 class="section-title">
+            Expenses
+          </h3>
+
+          <div id="expenses"></div>
+
+          <button
+            class="secondary"
+            onclick="addExpense()"
+          >
+            + Add Expense
+          </button>
+
+
+          <div
+            class="grid"
+            style="margin-top:18px"
+          >
+
+            <div class="card">
+              <div class="muted">Revenue</div>
+              <div class="metric" id="eRevenue">Rs. 0</div>
+            </div>
+
+            <div class="card">
+              <div class="muted">Expenses</div>
+              <div class="metric" id="eExpense">Rs. 0</div>
+            </div>
+
+            <div class="card">
+              <div class="muted">Profit / Loss</div>
+              <div class="metric" id="eProfit">Rs. 0</div>
+            </div>
+
+            <div class="card">
+              <div class="muted">Balance To Collect</div>
+              <div class="metric" id="eDue">Rs. 0</div>
+            </div>
+
+          </div>
+
+
+          <div class="actions">
+
+            <button onclick="saveTrek()">
+              Save Trek
+            </button>
+
+            <button
+              class="secondary"
+              onclick="show('treks')"
+            >
+              Cancel
+            </button>
+
+            <button
+              id="deleteBtn"
+              class="danger hidden"
+              onclick="deleteCurrent()"
+            >
+              Delete Trek
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ADMIN -->
+      <section id="admin" class="hidden">
+
+        <div class="card">
+
+          <h2>Admin / Company Settings</h2>
+
+          <p class="muted">
+            Both office users have equal access in this version.
+            Every authenticated user can view and edit the shared trek records.
+          </p>
+
+          <div class="notice">
+            Create the two office accounts in Supabase
+            Authentication → Users.
+            Both accounts then see the same company data.
+          </div>
+
+          <h3>Current account</h3>
+
+          <p id="adminUser"></p>
+
+          <h3>Company</h3>
+
+          <div class="formgrid">
+
+            <div>
+              <label>Company</label>
+              <input
+                value="Nature Explore Treks"
+                disabled
+              >
+            </div>
+
+            <div>
+              <label>Website</label>
+              <input
+                value="www.exploreinnepal.com"
+                disabled
+              >
+            </div>
+
+            <div>
+              <label>Currency</label>
+              <input
+                value="NPR (Rs.)"
+                disabled
+              >
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+
+<script>
+
+  /*
+   * ============================================================
+   * SUPABASE CONFIGURATION
+   * ============================================================
+   *
+   * IMPORTANT:
+   * These must be plain URLs/strings.
+   * Do NOT put Markdown [ ] or ( ) around the URL.
+   */
+
+  const SUPABASE_URL =
+    "https://gowwajgicvmpbfqllfil.supabase.co";
+
+  const SUPABASE_ANON_KEY =
+    "sb_publishable_kqsedXbP1iMoG8IdpRdwEw_qXeo2D6c";
+
+
+  let sb = null;
+  let data = [];
+  let currentId = null;
+
+
+  /*
+   * ============================================================
+   * HELPERS
+   * ============================================================
+   */
+
+  const $ = id => document.getElementById(id);
+
+
+  function money(n) {
+    return "Rs. " +
+      Number(n || 0).toLocaleString("en-IN", {
+        maximumFractionDigits: 2
+      });
+  }
+
+
+  function msg(text, type = "error") {
+
+    const box = $("loginMsg");
+
+    box.textContent = text;
+
+    box.className = "notice";
+
+    if (type === "success") {
+      box.classList.add("success");
+    } else {
+      box.classList.add("error");
+    }
+  }
+
+
+  function hideLoginMessage() {
+    $("loginMsg").classList.add("hidden");
+  }
+
+
+  /*
+   * Escape HTML safely.
+   *
+   * This fixes the syntax error that was present
+   * in your original code.
+   */
+
+  function esc(s) {
+
+    return String(s || "").replace(/[&<>"']/g, m => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[m]));
+
+  }
+
+
+  /*
+   * ============================================================
+   * SUPABASE INITIALIZATION
+   * ============================================================
+   */
+
+  function configured() {
+
+    return (
+      SUPABASE_URL &&
+      SUPABASE_ANON_KEY &&
+      SUPABASE_URL.startsWith("https://") &&
+      !SUPABASE_URL.includes("PASTE_") &&
+      !SUPABASE_ANON_KEY.includes("PASTE_")
+    );
+
+  }
+
+
+  if (
+    configured() &&
+    window.supabase &&
+    typeof window.supabase.createClient === "function"
+  ) {
+
+    sb = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+  } else {
+
+    console.error("Supabase is not configured correctly.");
+
+  }
+
+
+  /*
+   * ============================================================
+   * LOGIN
+   * ============================================================
+   */
+
+  async function login() {
+
+    hideLoginMessage();
+
+    if (!sb) {
+
+      msg(
+        "Supabase is not connected. Check your Supabase URL and publishable key."
+      );
+
+      return;
+    }
+
+
+    const email =
+      $("email").value.trim();
+
+    const password =
+      $("password").value;
+
+
+    if (!email || !password) {
+
+      msg("Please enter your email and password.");
+
+      return;
+    }
+
+
+    const button = $("loginBtn");
+
+    button.disabled = true;
+    button.textContent = "Logging in...";
+
+
+    try {
+
+      const result =
+        await sb.auth.signInWithPassword({
+          email,
+          password
+        });
+
+
+      if (result.error) {
+
+        console.error(
+          "Supabase login error:",
+          result.error
+        );
+
+        msg(result.error.message);
+
+        return;
+      }
+
+
+      if (!result.data || !result.data.user) {
+
+        msg("Login failed. Supabase did not return a user.");
+
+        return;
+      }
+
+
+      enter(result.data.user);
+
+    } catch (error) {
+
+      console.error("Login exception:", error);
+
+      msg(
+        "Unable to connect to Supabase. Check your internet connection and Supabase settings."
+      );
+
+    } finally {
+
+      button.disabled = false;
+      button.textContent = "Login";
+
+    }
+
+  }
+
+
+  /*
+   * Pressing ENTER in the password field also logs in.
+   */
+
+  $("password").addEventListener("keydown", event => {
+
+    if (event.key === "Enter") {
+      login();
+    }
+
+  });
+
+
+  /*
+   * ============================================================
+   * LOGOUT
+   * ============================================================
+   */
+
+  async function logout() {
+
+    if (sb) {
+
+      await sb.auth.signOut();
+
+    }
+
+    location.reload();
+
+  }
+
+
+  /*
+   * ============================================================
+   * ENTER APPLICATION
+   * ============================================================
+   */
+
+  async function enter(user) {
+
+    $("login").classList.add("hidden");
+    $("app").classList.remove("hidden");
+
+    $("userEmail").textContent =
+      user.email || "";
+
+    $("adminUser").textContent =
+      user.email || "";
+
+
+    await loadTreks();
+
+
+    /*
+     * Realtime updates.
+     */
+
+    sb
+      .channel("treks-live")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "treks"
+        },
+        () => loadTreks()
+      )
+      .subscribe();
+
+  }
+
+
+  /*
+   * ============================================================
+   * LOAD TREKS
+   * ============================================================
+   */
+
+  async function loadTreks() {
+
+    if (!sb) return;
+
+
+    const result =
+      await sb
+        .from("treks")
+        .select("*, expenses(*)")
+        .order("start_date", {
+          ascending: false
+        });
+
+
+    if (result.error) {
+
+      console.error(
+        "Load treks error:",
+        result.error
+      );
+
+      alert(
+        "Could not load treks:\n\n" +
+        result.error.message
+      );
+
+      return;
+    }
+
+
+    data = result.data || [];
+
+    renderDash();
+
+
+    if (!$("treks").classList.contains("hidden")) {
+      renderTreks();
+    }
+
+  }
+
+
+  /*
+   * ============================================================
+   * NAVIGATION
+   * ============================================================
+   */
+
+  function show(id) {
+
+    [
+      "dashboard",
+      "treks",
+      "editor",
+      "admin"
+    ].forEach(section => {
+
+      $(section).classList.toggle(
+        "hidden",
+        section !== id
+      );
+
+    });
+
+
+    if (id === "dashboard") {
+      renderDash();
+    }
+
+
+    if (id === "treks") {
+      renderTreks();
+    }
+
+  }
+
+
+  /*
+   * ============================================================
+   * NEW TREK
+   * ============================================================
+   */
+
+  function newTrek() {
+
+    currentId = null;
+
+    $("editorTitle").textContent =
+      "New Trek";
+
+
+    [
+      "name",
+      "client",
+      "date",
+      "notes"
+    ].forEach(id => {
+      $(id).value = "";
+    });
+
+
+    $("clients").value = 1;
+    $("price").value = 0;
+    $("received").value = 0;
+
+
+    $("expenses").innerHTML = "";
+
+    addExpense();
+
+
+    $("deleteBtn").classList.add("hidden");
+
+
+    updateEditor();
+
+    show("editor");
+
+  }
+
+
+  /*
+   * ============================================================
+   * EDIT TREK
+   * ============================================================
+   */
+
+  function editTrek(id) {
+
+    const trek =
+      data.find(t => String(t.id) === String(id));
+
+
+    if (!trek) return;
+
+
+    currentId = id;
+
+
+    $("editorTitle").textContent =
+      "Edit Trek";
+
+
+    $("name").value =
+      trek.name || "";
+
+    $("client").value =
+      trek.client_name || "";
+
+    $("date").value =
+      trek.start_date || "";
+
+    $("clients").value =
+      trek.client_count || 1;
+
+    $("price").value =
+      trek.price_per_person || 0;
+
+    $("received").value =
+      trek.amount_received || 0;
+
+    $("notes").value =
+      trek.notes || "";
+
+
+    $("expenses").innerHTML = "";
+
+
+    if (
+      trek.expenses &&
+      trek.expenses.length
+    ) {
+
+      trek.expenses.forEach(expense => {
+        addExpense(expense);
+      });
+
+    } else {
+
+      addExpense();
+
+    }
+
+
+    $("deleteBtn").classList.remove("hidden");
+
+
+    updateEditor();
+
+    show("editor");
+
+  }
+
+
+  /*
+   * ============================================================
+   * EXPENSES
+   * ============================================================
+   */
+
+  function addExpense(
+    expense = {
+      category: "",
+      amount: 0,
+      note: ""
+    }
+  ) {
+
+    const row =
+      document.createElement("div");
+
+    row.className =
+      "expense-row";
+
+
+    row.innerHTML = `
+      <div>
+        <label>Category</label>
+
+        <select class="excat">
+          <option value="">Choose...</option>
+          <option>Guide</option>
+          <option>Porter</option>
+          <option>Hotel / Lodge</option>
+          <option>Transportation</option>
+          <option>Permit</option>
+          <option>Food / Meals</option>
+          <option>Flight</option>
+          <option>Equipment</option>
+          <option>Staff</option>
+          <option>Commission</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Amount (Rs.)</label>
+        <input
+          class="examount"
+          type="number"
+          min="0"
+          value="0"
+        >
+      </div>
+
+      <div>
+        <label>Note</label>
+        <input class="exnote">
+      </div>
+
+      <button
+        class="danger"
+        type="button"
+      >
+        ×
+      </button>
+    `;
+
+
+    row.querySelector(".excat").value =
+      expense.category || "";
+
+
+    row.querySelector(".examount").value =
+      expense.amount || 0;
+
+
+    row.querySelector(".exnote").value =
+      expense.note || "";
+
+
+    row
+      .querySelector(".examount")
+      .addEventListener(
+        "input",
+        updateEditor
+      );
+
+
+    row
+      .querySelector("button")
+      .addEventListener(
+        "click",
+        () => {
+
+          row.remove();
+
+          updateEditor();
+
+        }
+      );
+
+
+    $("expenses").appendChild(row);
+
+  }
+
+
+  function getExpenses() {
+
+    return [
+      ...document.querySelectorAll(".expense-row")
+    ]
+      .map(row => ({
+
+        category:
+          row.querySelector(".excat").value,
+
+        amount:
+          Number(
+            row.querySelector(".examount").value || 0
+          ),
+
+        note:
+          row.querySelector(".exnote").value
+
+      }))
+      .filter(expense =>
+        expense.category ||
+        expense.amount
+      );
+
+  }
+
+
+  /*
+   * ============================================================
+   * CALCULATIONS
+   * ============================================================
+   */
+
+  function calc() {
+
+    const revenue =
+      Number($("clients").value || 0) *
+      Number($("price").value || 0);
+
+
+    const expenses =
+      getExpenses().reduce(
+        (total, expense) =>
+          total + expense.amount,
+        0
+      );
+
+
+    const received =
+      Number($("received").value || 0);
+
+
+    return {
+
+      rev: revenue,
+
+      ex: expenses,
+
+      p: revenue - expenses,
+
+      due: Math.max(
+        0,
+        revenue - received
+      )
+
+    };
+
+  }
+
+
+  function updateEditor() {
+
+    const c = calc();
+
+
+    $("eRevenue").textContent =
+      money(c.rev);
+
+
+    $("eExpense").textContent =
+      money(c.ex);
+
+
+    $("eProfit").textContent =
+      money(c.p);
+
+
+    $("eProfit").className =
+      "metric " +
+      (c.p >= 0 ? "profit" : "loss");
+
+
+    $("eDue").textContent =
+      money(c.due);
+
+  }
+
+
+  [
+    "clients",
+    "price",
+    "received"
+  ].forEach(id => {
+
+    $(id).addEventListener(
+      "input",
+      updateEditor
+    );
+
+  });
+
+
+  /*
+   * ============================================================
+   * SAVE TREK
+   * ============================================================
+   */
+
+  async function saveTrek() {
+
+    if (!sb) {
+
+      alert("Supabase is not connected.");
+
+      return;
+    }
+
+
+    const name =
+      $("name").value.trim();
+
+
+    const clients =
+      Number($("clients").value);
+
+
+    if (!name || clients < 1) {
+
+      alert(
+        "Enter trek name and number of clients."
+      );
+
+      return;
+    }
+
+
+    const trekData = {
+
+      name,
+
+      client_name:
+        $("client").value.trim(),
+
+      start_date:
+        $("date").value || null,
+
+      client_count:
+        clients,
+
+      price_per_person:
+        Number($("price").value || 0),
+
+      amount_received:
+        Number($("received").value || 0),
+
+      notes:
+        $("notes").value.trim()
+
+    };
+
+
+    try {
+
+      let result;
+
+
+      if (currentId) {
+
+        result =
+          await sb
+            .from("treks")
+            .update(trekData)
+            .eq("id", currentId)
+            .select()
+            .single();
+
+      } else {
+
+        result =
+          await sb
+            .from("treks")
+            .insert(trekData)
+            .select()
+            .single();
+
+      }
+
+
+      if (result.error) {
+
+        console.error(
+          "Save trek error:",
+          result.error
+        );
+
+        alert(
+          "Could not save trek:\n\n" +
+          result.error.message
+        );
+
+        return;
+      }
+
+
+      const trekId =
+        result.data.id;
+
+
+      /*
+       * Delete old expenses first.
+       */
+
+      const deleteExpenses =
+        await sb
+          .from("expenses")
+          .delete()
+          .eq("trek_id", trekId);
+
+
+      if (deleteExpenses.error) {
+
+        alert(
+          "Trek saved, but old expenses could not be updated:\n\n" +
+          deleteExpenses.error.message
+        );
+
+        return;
+      }
+
+
+      /*
+       * Insert current expenses.
+       */
+
+      const expenses =
+        getExpenses().map(expense => ({
+          ...expense,
+          trek_id: trekId
+        }));
+
+
+      if (expenses.length) {
+
+        const expenseResult =
+          await sb
+            .from("expenses")
+            .insert(expenses);
+
+
+        if (expenseResult.error) {
+
+          alert(
+            "Trek saved, but expenses could not be saved:\n\n" +
+            expenseResult.error.message
+          );
+
+          return;
+        }
+
+      }
+
+
+      await loadTreks();
+
+      show("treks");
+
+    } catch (error) {
+
+      console.error(
+        "Save exception:",
+        error
+      );
+
+      alert(
+        "An unexpected error occurred while saving."
+      );
+
+    }
+
+  }
+
+
+  /*
+   * ============================================================
+   * DELETE TREK
+   * ============================================================
+   */
+
+  async function deleteCurrent() {
+
+    if (!currentId) return;
+
+
+    const confirmed =
+      confirm(
+        "Delete this trek and its expenses?"
+      );
+
+
+    if (!confirmed) return;
+
+
+    const result =
+      await sb
+        .from("treks")
+        .delete()
+        .eq("id", currentId);
+
+
+    if (result.error) {
+
+      alert(
+        "Could not delete trek:\n\n" +
+        result.error.message
+      );
+
+      return;
+    }
+
+
+    currentId = null;
+
+    await loadTreks();
+
+    show("treks");
+
+  }
+
+
+  /*
+   * ============================================================
+   * TOTALS
+   * ============================================================
+   */
+
+  function totals() {
+
+    return data.reduce(
+      (total, trek) => {
+
+        const revenue =
+          Number(trek.client_count || 0) *
+          Number(trek.price_per_person || 0);
+
+
+        const expenses =
+          (trek.expenses || []).reduce(
+            (sum, expense) =>
+              sum + Number(expense.amount || 0),
+            0
+          );
+
+
+        total.rev += revenue;
+
+        total.ex += expenses;
+
+        total.rec +=
+          Number(trek.amount_received || 0);
+
+
+        return total;
+
+      },
+      {
+        rev: 0,
+        ex: 0,
+        rec: 0
+      }
+    );
+
+  }
+
+
+  /*
+   * ============================================================
+   * DASHBOARD
+   * ============================================================
+   */
+
+  function renderDash() {
+
+    const total = totals();
+
+
+    $("mRevenue").textContent =
+      money(total.rev);
+
+
+    $("mExpense").textContent =
+      money(total.ex);
+
+
+    $("mProfit").textContent =
+      money(total.rev - total.ex);
+
+
+    $("mProfit").className =
+      "metric " +
+      (
+        total.rev - total.ex >= 0
+          ? "profit"
+          : "loss"
+      );
+
+
+    $("mDue").textContent =
+      money(
+        Math.max(
+          0,
+          total.rev - total.rec
+        )
+      );
+
+
+    if (!data.length) {
+
+      $("recent").innerHTML =
+        '<div class="empty">No treks yet.</div>';
+
+      return;
+    }
+
+
+    $("recent").innerHTML = `
+      <div style="overflow-x:auto">
+
+        <table>
+
+          <tr>
+            <th>Trek</th>
+            <th>Clients</th>
+            <th>Revenue</th>
+            <th>Expenses</th>
+            <th>Profit/Loss</th>
+          </tr>
+
+          ${data
+            .slice(0, 8)
+            .map(row)
+            .join("")}
+
+        </table>
+
+      </div>
+    `;
+
+  }
+
+
+  function row(trek) {
+
+    const revenue =
+      Number(trek.client_count || 0) *
+      Number(trek.price_per_person || 0);
+
+
+    const expenses =
+      (trek.expenses || []).reduce(
+        (sum, expense) =>
+          sum + Number(expense.amount || 0),
+        0
+      );
+
+
+    const profit =
+      revenue - expenses;
+
+
+    return `
+      <tr>
+
+        <td>
+          <b>${esc(trek.name)}</b>
+          <br>
+          <span class="muted">
+            ${esc(trek.client_name || "")}
+          </span>
+        </td>
+
+        <td>
+          ${trek.client_count || 0}
+        </td>
+
+        <td>
+          ${money(revenue)}
+        </td>
+
+        <td>
+          ${money(expenses)}
+        </td>
+
+        <td class="${profit >= 0 ? "profit" : "loss"}">
+          ${money(profit)}
+        </td>
+
+      </tr>
+    `;
+
+  }
+
+
+  /*
+   * ============================================================
+   * ALL TREKS
+   * ============================================================
+   */
+
+  function renderTreks() {
+
+    if (!data.length) {
+
+      $("trekTable").innerHTML =
+        '<div class="empty">No treks recorded.</div>';
+
+      return;
+    }
+
+
+    $("trekTable").innerHTML = `
+      <div style="overflow-x:auto">
+
+        <table>
+
+          <tr>
+            <th>Trek</th>
+            <th>Date</th>
+            <th>Clients</th>
+            <th>Revenue</th>
+            <th>Expenses</th>
+            <th>Profit/Loss</th>
+            <th></th>
+          </tr>
+
+          ${data.map(trek => {
+
+            const revenue =
+              Number(trek.client_count || 0) *
+              Number(trek.price_per_person || 0);
+
+
+            const expenses =
+              (trek.expenses || []).reduce(
+                (sum, expense) =>
+                  sum + Number(expense.amount || 0),
+                0
+              );
+
+
+            const profit =
+              revenue - expenses;
+
+
+            return `
+              <tr>
+
+                <td>
+                  <b>${esc(trek.name)}</b>
+                  <br>
+                  <span class="muted">
+                    ${esc(trek.client_name || "")}
+                  </span>
+                </td>
+
+                <td>
+                  ${trek.start_date || "-"}
+                </td>
+
+                <td>
+                  ${trek.client_count || 0}
+                </td>
+
+                <td>
+                  ${money(revenue)}
+                </td>
+
+                <td>
+                  ${money(expenses)}
+                </td>
+
+                <td class="${profit >= 0 ? "profit" : "loss"}">
+                  ${money(profit)}
+                </td>
+
+                <td>
+                  <button
+                    onclick="editTrek('${esc(trek.id)}')"
+                  >
+                    Edit
+                  </button>
+                </td>
+
+              </tr>
+            `;
+
+          }).join("")}
+
+        </table>
+
+      </div>
+    `;
+
+  }
+
+
+  /*
+   * ============================================================
+   * BACKUP
+   * ============================================================
+   */
+
+  function exportData() {
+
+    const blob =
+      new Blob(
+        [
+          JSON.stringify(
+            data,
+            null,
+            2
+          )
+        ],
+        {
+          type: "application/json"
+        }
+      );
+
+
+    const link =
+      document.createElement("a");
+
+
+    link.href =
+      URL.createObjectURL(blob);
+
+
+    link.download =
+      "nature-explore-trek-backup.json";
+
+
+    link.click();
+
+
+    URL.revokeObjectURL(link.href);
+
+  }
+
+
+  /*
+   * ============================================================
+   * RESTORE EXISTING SESSION
+   * ============================================================
+   */
+
+  async function checkSession() {
+
+    if (!sb) {
+
+      console.error(
+        "Supabase client was not created."
+      );
+
+      return;
+    }
+
+
+    try {
+
+      const result =
+        await sb.auth.getSession();
+
+
+      if (
+        result.data &&
+        result.data.session
+      ) {
+
+        enter(
+          result.data.session.user
+        );
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Session check failed:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /*
+   * Supabase automatically detects authentication
+   * state changes.
+   */
+
+  if (sb) {
+
+    sb.auth.onAuthStateChange(
+      (event, session) => {
+
+        console.log(
+          "Auth event:",
+          event
+        );
+
+
+        if (
+          event === "SIGNED_OUT" ||
+          !session
+        ) {
+
+          $("app").classList.add("hidden");
+          $("login").classList.remove("hidden");
+
+        }
+
+      }
+    );
+
+  }
+
+
+  /*
+   * Start application.
+   */
+
+  checkSession();
+
+
+</script>
+
+</body>
+</html>
+```
